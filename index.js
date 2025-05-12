@@ -15,17 +15,39 @@ const server = http.createServer((request, response) => {
   })
 
   request.on('end', () => {
+    const id = url.split('/')[2];
+    
+    //GET
     if (url === '/grades' && method === 'GET'){
-    response.writeHead(200, {"content-type": "application/json"})
+    response.writeHead(200, {"Content-Type": "application/json"})
     response.end(JSON.stringify(grades))
+
+    //POST
   } else if (url === '/grades' && method === 'POST'){
     const {studentName, subject, grade} = JSON.parse(body)
     const newGrade = {id: v4(), studentName, subject, grade}
     grades.push(newGrade)
-    response.writeHead(201, {"content-type": "application/json"})
+    response.writeHead(201, {"Content-Type": "application/json"})
     response.end(JSON.stringify(newGrade))
-  }  else{
-    response.writeHead(404, {"content-type": "application/json"})
+
+    //PUT
+  }  else if (url.startsWith('/grades/') && method === 'PUT') {
+    const {studentName, subject, grade} = JSON.parse(body)
+    const gradeToUpdate = grades.find((g) => g.id === id)
+    if(gradeToUpdate){
+        gradeToUpdate.studentName = studentName;
+        gradeToUpdate.subject = subject;
+        gradeToUpdate.grade = grade;
+        response.writeHead(200, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify(gradeToUpdate))
+    } else{
+        response.writeHead(404, {'Content-Type': 'application/json'})
+        response.end(JSON.stringify({message: 'Grade not found'}))
+    }
+
+    //MESSAGE ERROR
+  } else{
+    response.writeHead(404, {"Content-Type": "application/json"})
     response.end(JSON.stringify({message: 'Route not found'}))
   }
 });
