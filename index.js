@@ -1,57 +1,68 @@
 import http from "http";
-import {v4} from 'uuid';
+import { v4 } from "uuid";
 
 const port = 3000;
-const grades = [
-
-];
+const grades = [];
 
 const server = http.createServer((request, response) => {
-  const {method, url} = request
-  let body = '';
+  const { method, url } = request;
+  let body = "";
 
-  request.on('data', chunk => {
+  request.on("data", (chunk) => {
     body += chunk.toString();
-  })
+  });
 
-  request.on('end', () => {
-    const id = url.split('/')[2];
-    
+  request.on("end", () => {
+    const id = url.split("/")[2];
+
     //GET
-    if (url === '/grades' && method === 'GET'){
-    response.writeHead(200, {"Content-Type": "application/json"})
-    response.end(JSON.stringify(grades))
+    if (url === "/grades" && method === "GET") {
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify(grades));
 
-    //POST
-  } else if (url === '/grades' && method === 'POST'){
-    const {studentName, subject, grade} = JSON.parse(body)
-    const newGrade = {id: v4(), studentName, subject, grade}
-    grades.push(newGrade)
-    response.writeHead(201, {"Content-Type": "application/json"})
-    response.end(JSON.stringify(newGrade))
+      //POST
+    } else if (url === "/grades" && method === "POST") {
+      const { studentName, subject, grade } = JSON.parse(body);
+      const newGrade = { id: v4(), studentName, subject, grade };
+      grades.push(newGrade);
+      response.writeHead(201, { "Content-Type": "application/json" });
+      response.end(JSON.stringify(newGrade));
 
-    //PUT
-  }  else if (url.startsWith('/grades/') && method === 'PUT') {
-    const {studentName, subject, grade} = JSON.parse(body)
-    const gradeToUpdate = grades.find((g) => g.id === id)
-    if(gradeToUpdate){
+      //PUT
+    } else if (url.startsWith("/grades/") && method === "PUT") {
+      const { studentName, subject, grade } = JSON.parse(body);
+      const gradeToUpdate = grades.find((g) => g.id === id);
+      if (gradeToUpdate) {
         gradeToUpdate.studentName = studentName;
         gradeToUpdate.subject = subject;
         gradeToUpdate.grade = grade;
-        response.writeHead(200, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify(gradeToUpdate))
-    } else{
-        response.writeHead(404, {'Content-Type': 'application/json'})
-        response.end(JSON.stringify({message: 'Grade not found'}))
+        response.writeHead(200, { "Content-Type": "application/json" });
+        response.end(JSON.stringify(gradeToUpdate));
+      } else {
+        response.writeHead(404, { "Content-Type": "application/json" });
+        response.end(JSON.stringify({ message: "Grade not found" }));
+      }
+
+      //DELETE
+    } else if (url.startsWith("/grades/") && method === "DELETE") {
+        const index = grades.findIndex((g) => g.id === id)
+        if(index !== -1){
+            grades.splice(index, 1);
+            response.writeHead(204)
+            response.end()
+        } else {
+            response.writeHead(404, {"content-type": "application/json"})
+            response.end(JSON.stringify({ message: "Grade not found"}))
+        }
     }
 
     //MESSAGE ERROR
-  } else{
-    response.writeHead(404, {"Content-Type": "application/json"})
-    response.end(JSON.stringify({message: 'Route not found'}))
-  }
+    else {
+      response.writeHead(404, { "Content-Type": "application/json" });
+      response.end(JSON.stringify({ message: "Route not found" }));
+    }
+  });
 });
-  })
 
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
